@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -256,6 +256,7 @@ rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
+  { import = 'custom.plugins' },
   { 'NMAC427/guess-indent.nvim', opts = {} },
 
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
@@ -734,6 +735,7 @@ require('lazy').setup({
         },
         opts = {},
       },
+      { 'taku25/blink-cmp-unreal' },
     },
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
@@ -779,7 +781,14 @@ require('lazy').setup({
       },
 
       sources = {
-        default = { 'lsp', 'path', 'snippets' },
+        default = { 'lsp', 'path', 'snippets', 'unreal' },
+        providers = {
+          unreal = {
+            module = 'blink-cmp-unreal',
+            name = 'unreal',
+            score_offset = 15,
+          },
+        },
       },
 
       snippets = { preset = 'luasnip' },
@@ -875,7 +884,21 @@ require('lazy').setup({
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
     config = function()
       -- ensure basic parser are installed
-      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+      local parsers = { 'bash', 'c', 'cpp', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+
+      -- Unreal Engine custom C++ parser (via TSUpdate Event wie vom Autor vorgesehen)
+      vim.api.nvim_create_autocmd('User', {
+        pattern = 'TSUpdate',
+        callback = function()
+          local ts_parsers = require 'nvim-treesitter.parsers'
+          ts_parsers.cpp = {
+            install_info = {
+              url = 'https://github.com/taku25/tree-sitter-unreal-cpp',
+              revision = '7bbb85f1fcc6e109c90cea2167e88a5a472910d3',
+            },
+          }
+        end,
+      })
       require('nvim-treesitter').install(parsers)
 
       ---@param buf integer
