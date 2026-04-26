@@ -93,6 +93,50 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
+-- [[ Bootstrap Roblox Luau type definitions for luau-lsp ]]
+-- Lazy verwaltet nur Plugin-Repos, nicht statische Datendateien.
+-- Daher hier ein eigener Bootstrap, der globalTypes + api-docs einmalig laedt
+-- und einmal pro Tag asynchron auf neuere Versionen prueft (curl -z = If-Modified-Since).
+do
+  local luau_dir = vim.fn.stdpath 'data' .. '/luau'
+  local marker = luau_dir .. '/.last-check'
+  local files = {
+    {
+      path = luau_dir .. '/globalTypes.d.luau',
+      url = 'https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau',
+    },
+    {
+      path = luau_dir .. '/api-docs.json',
+      url = 'https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/api-docs/en-us.json',
+    },
+  }
+
+  local missing = {}
+  for _, f in ipairs(files) do
+    if vim.fn.filereadable(f.path) == 0 then table.insert(missing, f) end
+  end
+
+  if #missing > 0 then
+    -- Erstinstallation: synchron, weil luau-lsp die Dateien beim Start braucht
+    vim.fn.mkdir(luau_dir, 'p')
+    for _, f in ipairs(missing) do
+      vim.notify('Downloading ' .. vim.fs.basename(f.path) .. '...', vim.log.levels.INFO)
+      vim.system({ 'curl', '-fsSL', '-o', f.path, f.url }, { text = true }):wait()
+    end
+    vim.fn.writefile({}, marker)
+  else
+    -- Update-Check: max. einmal pro 24h, asynchron (blockiert Startup nicht)
+    local stat = vim.uv.fs_stat(marker)
+    local age = stat and (os.time() - stat.mtime.sec) or math.huge
+    if age > 86400 then
+      for _, f in ipairs(files) do
+        vim.system({ 'curl', '-fsSL', '-z', f.path, '-o', f.path, f.url }, { text = true })
+      end
+      vim.fn.writefile({}, marker)
+    end
+  end
+end
+
 -- [[ Setting options ]]
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
