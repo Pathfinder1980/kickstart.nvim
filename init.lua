@@ -605,14 +605,26 @@ require('lazy').setup({
         -- gopls = {},
         pyright = {},
         luau_lsp = {
+          cmd = {
+            'luau-lsp',
+            'lsp',
+            '--definitions=' .. vim.fn.stdpath 'data' .. '/luau/globalTypes.d.luau',
+            '--docs=' .. vim.fn.stdpath 'data' .. '/luau/api-docs.json',
+          },
+          root_markers = { 'default.project.json', '.luaurc', 'rojo.json', '.git' },
           settings = {
             ['luau-lsp'] = {
-              platform = { 'roblox' },
+              platform = { type = 'roblox' },
               sourcemap = {
                 enabled = true,
                 autogenerate = true,
                 rojoProjectFile = 'default.project.json',
               },
+              completion = {
+                imports = { enabled = true },
+              },
+              diagnostics = { workspace = true },
+              types = { roblox = true, robloxSecurityLevel = 'PluginSecurity' },
             },
           },
         },
