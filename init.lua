@@ -208,6 +208,11 @@ vim.o.scrolloff = 10
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
+-- Write files in-place instead of rename-over-temp. Rojo's filesystem
+-- watcher tracks inodes; the default atomic-save changes the inode and
+-- silently breaks sync until Rojo is restarted.
+vim.o.backupcopy = 'yes'
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
